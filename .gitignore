@@ -1,0 +1,12 @@
+.DS_Store
+*.log
+
+# Go build/module caches (local only; never commit)
+.gocache/
+.gomodcache/
+
+# Editor/IDE
+.idea/
+.vscode/
+*.swp
+*.swo

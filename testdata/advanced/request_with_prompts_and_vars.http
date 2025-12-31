@@ -1,0 +1,28 @@
+///
+// @name request_with_prompts_and_vars
+@host={{$dotenv host}}
+@token={{$dotenv token}}
+@user={{$processEnv USER}}
+@ghi={{$dotenv ghi}}
+@date={{$datetime iso8601}}
+///
+
+POST {{host}}/post HTTP/1.1
+Authorization: Bearer {{token}}
+Content-Length: 214
+Date: {{date}}
+Access-Control-Allow-Origin: *
+
+{
+  "username": "{{user}}",
+  "ghi": "{{ghi}}",
+  "object": {
+    "abc": "124",
+    "ghi": "789",
+  }
+  "array": [
+    "abc",
+    "ghi",
+    "jkl",
+  ]
+}
