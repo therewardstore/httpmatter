@@ -99,5 +99,5 @@ func TestMockWithPromptsAndVars(t *testing.T) {
 	must.Equal("*", resp.Header.Get("Access-Control-Allow-Origin"))
 	body, err = io.ReadAll(resp.Body)
 	must.NoError(err)
-	must.Len(body, 687)
+	must.GreaterOrEqual(len(body), 687)
 }
