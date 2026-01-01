@@ -1,6 +1,7 @@
 package httpmatter
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 )
@@ -43,5 +44,8 @@ func (rm *RequestMatter) BodyBytes() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Preserve existing behavior (return the bytes) while also keeping the request
+	// sendable after inspection by resetting the body reader.
+	rm.Body = io.NopCloser(bytes.NewReader(body))
 	return body, nil
 }

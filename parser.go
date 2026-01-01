@@ -3,6 +3,7 @@ package httpmatter
 import (
 	"bufio"
 	"bytes"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -13,6 +14,32 @@ func ParseRequest(content []byte) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// http.ReadRequest parses a server-side request (RequestURI is typically set).
+	// For http.Client.Do, RequestURI must be empty.
+	req.RequestURI = ""
+
+	// Ensure Host is set for client-side usage.
+	if req.URL != nil && req.URL.Host != "" {
+		req.Host = req.URL.Host
+	}
+
+	// Make the request body rewindable so callers can inspect it (BodyBytes/BodyString)
+	// and still send it using http.Client.
+	if req.Body != nil {
+		b, err := io.ReadAll(req.Body)
+		if err != nil {
+			return nil, err
+		}
+		_ = req.Body.Close()
+
+		req.Body = io.NopCloser(bytes.NewReader(b))
+		req.ContentLength = int64(len(b))
+		req.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(bytes.NewReader(b)), nil
+		}
+	}
+
 	return req, nil
 }
 

@@ -1,9 +1,12 @@
 package httpmatter
 
 import (
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -85,4 +88,16 @@ func TestMockWithPromptsAndVars(t *testing.T) {
 	must.Equal("Bearer SuperSecretSerivces", mock.Header.Get("Authorization"))
 	must.Equal("2025-01-01T00:00:00Z", mock.Header.Get("Date"))
 	must.Equal("*", mock.Header.Get("Access-Control-Allow-Origin"))
+
+	client := &http.Client{}
+	resp, err := client.Do(mock.Request)
+	must.NoError(err)
+	must.Equal(200, resp.StatusCode)
+	must.Equal("application/json", resp.Header.Get("Content-Type"))
+	_, err = time.Parse(time.RFC1123, resp.Header.Get("Date"))
+	must.NoError(err)
+	must.Equal("*", resp.Header.Get("Access-Control-Allow-Origin"))
+	body, err = io.ReadAll(resp.Body)
+	must.NoError(err)
+	must.Len(body, 687)
 }
