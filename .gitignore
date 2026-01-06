@@ -10,3 +10,5 @@
 .vscode/
 *.swp
 *.swo
+
+testdata/tmp/

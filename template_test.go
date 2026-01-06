@@ -26,7 +26,7 @@ func TestExecuteTemplate(t *testing.T) {
 	not a {{ index .Vars "number" }},
 	not a {{ index .Vars "date" }}`
 	matter := &Matter{
-		config: &Config{},
+		config: Config{},
 		Vars: map[string]any{
 			"who":    "John",
 			"thing":  "table",

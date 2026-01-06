@@ -9,7 +9,12 @@ type Config struct {
 	FileExtension     string
 	EnvFileName       string
 	EnvFileExtension  string
+	DisableLogs       bool
 	TemplateConverter func(content string) string
+}
+
+func (c *Config) copy() Config {
+	return *c
 }
 
 func Init(conf *Config) error {

@@ -2,13 +2,15 @@ package httpmatter
 
 import (
 	"bufio"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
 // Matter is a generic matter that can be used to store content and error
 type Matter struct {
-	config    *Config
+	config    Config
 	front     string
 	content   string
 	Namespace string
@@ -19,7 +21,7 @@ type Matter struct {
 
 func NewMatter(namespace, name string) *Matter {
 	return &Matter{
-		config:    config,
+		config:    config.copy(),
 		Namespace: namespace,
 		Name:      name,
 		Vars:      make(map[string]any),
@@ -48,7 +50,7 @@ func (m *Matter) Read() error {
 	// first read the .dot env file
 	m.readDotEnv()
 	m.ifTB(func(tb testing.TB) {
-		tb.Log("Reading file", m.filePath(), "for", m.Namespace, m.Name)
+		tb.Logf("Reading file %s for %s/%s", m.filePath(), m.Namespace, m.Name)
 	})
 	front, content, err := readFile(m.filePath())
 	if err != nil {
@@ -111,4 +113,13 @@ func (m *Matter) ifTB(fn func(tb testing.TB)) {
 		return
 	}
 	fn(m.tb)
+}
+
+func (m *Matter) Save() error {
+	filePath := m.filePath()
+	dir := filepath.Dir(filePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(filePath, []byte(m.front+m.content), 0644)
 }
