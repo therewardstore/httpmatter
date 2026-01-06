@@ -1,7 +1,7 @@
 package httpmatter
 
-// Matterer is a generic interface that can be used to create a matter
-type Matterer interface {
+// matterer is a generic interface that can be used to create a matter
+type matterer interface {
 	WithOptions(opts ...Option) error
 	Read() error
 	Parse() error
@@ -20,7 +20,7 @@ func Response(namespace, name string, opts ...Option) (*ResponseMatter, error) {
 }
 
 // makeMatter makes a matter with the given options
-func makeMatter(matter Matterer, opts ...Option) error {
+func makeMatter(matter matterer, opts ...Option) error {
 	if err := matter.WithOptions(opts...); err != nil {
 		return err
 	}

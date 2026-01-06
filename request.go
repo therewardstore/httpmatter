@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"net/http/httputil"
 )
 
 // RequestMatter is a matter that can be used to store request content and error
@@ -48,4 +49,18 @@ func (rm *RequestMatter) BodyBytes() ([]byte, error) {
 	// sendable after inspection by resetting the body reader.
 	rm.Body = io.NopCloser(bytes.NewReader(body))
 	return body, nil
+}
+
+func (rm *RequestMatter) Dump(req *http.Request) error {
+	b, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		return err
+	}
+	rm.content = string(b)
+	rm.Request = req
+	return nil
+}
+
+func (rm *RequestMatter) Save() error {
+	return rm.Matter.Save()
 }

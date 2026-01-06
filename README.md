@@ -1,4 +1,5 @@
 # httpmatter
+![Build Status](https://github.com/therewardstore/httpmatter/actions/workflows/ci.yml/badge.svg)
 
 File-backed HTTP request/response fixtures with a thin wrapper on top of `github.com/jarcoal/httpmock`.
 
@@ -69,12 +70,14 @@ import (
 	"github.com/therewardstore/httpmatter"
 )
 
-func TestSomething(t *testing.T) {
+func init() {
 	_ = httpmatter.Init(&httpmatter.Config{
 		BaseDir: filepath.Join("testdata"),
 		FileExtension: ".http",
 	})
+}
 
+func TestSomething(t *testing.T) {
 	resp, err := httpmatter.Response("basic", "response_with_header")
 	if err != nil {
 		t.Fatal(err)
@@ -88,17 +91,85 @@ func TestSomething(t *testing.T) {
 }
 ```
 
+### Load and execute a request fixture
+
+Load a `.http` fixture, substitute variables, and execute it using a standard `http.Client`.
+
+```go
+func TestRequestFixture(t *testing.T) {
+	reqMatter, err := httpmatter.Request(
+		"advanced",
+		"create_order",
+		httpmatter.WithVariables(map[string]any{
+			"ProductID": 123,
+			"token": "secret-token",
+		}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(reqMatter.Request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected 200, got %d", resp.StatusCode)
+	}
+}
+```
+
+### Capture and save a response fixture
+
+Capture a real `*http.Response` and save it to a fixture file. This is useful for recording real API responses to use as future mocks.
+
+```go
+func TestRecordResponse(t *testing.T) {
+	// Initialize the response matter. If the file doesn't exist yet,
+	// Response() returns ErrReadingFile which we can ignore when recording.
+	respMatter, err := httpmatter.Response("tmp", "recorded_api_response")
+	if err != nil && !errors.Is(err, httpmatter.ErrReadingFile()) {
+		t.Fatal(err)
+	}
+
+	// Make a real request using standard http.Client
+	resp, err := http.Get("https://httpbin.org/json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	// Capture the response content into the matter
+	if err := respMatter.Dump(resp); err != nil {
+		t.Fatal(err)
+	}
+
+	// Save to testdata/tmp/recorded_api_response.http
+	if err := respMatter.Save(); err != nil {
+		t.Fatal(err)
+	}
+}
+```
+
 ### Mock outgoing HTTP calls (global)
 
 This library uses `httpmock.Activate()` / `httpmock.DeactivateAndReset()`, which is **global within the current process**.
 
 - Avoid `t.Parallel()` in tests that use `(*HTTP).Init()`.
 ```go
-func TestVendorFlow(t *testing.T) {
+
+func init() {
 	_ = httpmatter.Init(&httpmatter.Config{
 		BaseDir: filepath.Join("testdata"),
+		FileExtension: ".http",
 	})
+}
 
+func TestVendorFlow(t *testing.T) {
 	h := httpmatter.NewHTTP(t, "basic").
 		Add("request_with_prompts_and_vars", "response_with_header").
 		Respond(nil)

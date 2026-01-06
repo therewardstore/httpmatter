@@ -18,13 +18,13 @@ type trip struct {
 }
 
 type HTTP struct {
-	t          *testing.T
+	t          testing.TB
 	namespaces []string
 	trip       *trip
 	trips      []*trip
 }
 
-func NewHTTP(t *testing.T, namespaces ...string) *HTTP {
+func NewHTTP(t testing.TB, namespaces ...string) *HTTP {
 	return &HTTP{
 		t:          t,
 		namespaces: namespaces,
@@ -53,7 +53,7 @@ func (h *HTTP) Init() {
 	}
 
 	for key, group := range groups {
-		h.t.Log("Registering responder for ", key, "with", len(group), "trips")
+		h.t.Logf("Registering responder for %s with %d trips", key, len(group))
 		httpmock.RegisterResponder(
 			// Because group always have same Method and URL,
 			// we can use the first trip to get the method and url
